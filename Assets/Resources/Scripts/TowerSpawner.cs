@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -20,7 +19,7 @@ public class TowerSpawner : MonoBehaviour
             first = false;
 
             // Load the ghost from the tower prefab
-            ghost = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Game.GetPrefabLocation(towerName)));
+            ghost = Instantiate(Resources.Load<GameObject>(Game.GetPrefabLocation(towerName)));
 
             // Destroy tower components so it's not functional
             Destroy(ghost.GetComponent<CapsuleCollider>());
@@ -56,7 +55,7 @@ public class TowerSpawner : MonoBehaviour
 
 
             // Load the new tower's prefab
-            GameObject newTowerObj = AssetDatabase.LoadAssetAtPath<GameObject>(Game.GetPrefabLocation(towerName));
+            GameObject newTowerObj = Resources.Load<GameObject>(Game.GetPrefabLocation(towerName));
 
             // Check if the tower would collide with any other towers
             bool collidesWithtower = false;
