@@ -6,6 +6,18 @@ using System.Collections.Generic;
 // One in every tower. Stores all information needed for detecting enemies. Stores range, speed, damage it inflicts
 public class Tower : MonoBehaviour
 {
+	[Range(0.0f,10.0f)]
+	public float shotInterval = 0.5f; // interval between shots
+	public Rigidbody bulletPrefab; // drag the bullet prefab here
+	public Transform bulletSpawn;
+	[Range(0.0f,10000.0f)]
+	public float speed = 1000.0f;
+
+	private float shootTime = 0.0f;
+	private List<Transform> targets;
+	private Transform selectedTarget;
+	private Transform myTransform;
+
     // List of towers in use (STATIC: list is the same for all towers)
     static List<Tower> towerList = new List<Tower>(128);
     // Count of towers (STATIC)
@@ -38,22 +50,64 @@ public class Tower : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+		targets = new List<Transform>();
+		selectedTarget = null;
+		myTransform = transform;
         towerList.Add(this);
         id = towerList.Count-1;
         gameObject.name = "Tower " + Id() + " (" + gameObject.name + ")";
     }
 
-    void OnDestroy()
+    void OnDestroy() //Destroys a tower
     {
         towerList.Remove(this);
         towerCount -= 1;
         id = -1;
     }
 
+	void OnTriggerEnter(Collider other){
+		if (other.tag == "Enemy"){ // only enemies are added to the target list!
+			targets.Add(other.transform);
+			print(targets);
+		}
+	}
+
+	void OnTriggerExit(Collider other){
+		if (other.tag == "Enemy"){
+			targets.Remove(other.transform);
+		}
+	}
+
+	void TargetEnemy(){
+		if (selectedTarget == null){ // if target destroyed or not selected yet...
+			SortTargetsByDistance();  // select the closest one
+			if (targets.Count > 0) selectedTarget = targets[0];    
+		}
+	}
+
+	void SortTargetsByDistance(){
+		targets.Sort(delegate(Transform t1, Transform t2){ 
+			return Vector3.Distance(t1.position, myTransform.position).CompareTo(Vector3.Distance(t2.position, myTransform.position));
+		});
+	}
+
+
     // Update is called once per frame
     void Update()
     {
-
+		TargetEnemy(); // update the selected target and look at it
+		if (selectedTarget){ // if there's any target in the range...
+			transform.LookAt(selectedTarget); // aim at it
+			if (Time.time >= shootTime){ // if it's time to shoot...
+				GameObject bulletObj = Instantiate<GameObject>(Resources.Load(Game.GetPrefabLocation("Bullet")) as GameObject);
+				bulletObj.transform.position = bulletSpawn.position;
+				bulletObj.transform.rotation = bulletSpawn.rotation;
+				//Rigidbody bullet = (Rigidbody)Instantiate(bulletObj, bulletSpawn.position, bulletSpawn.rotation);
+				Rigidbody bullet = bulletObj.GetComponent<Rigidbody>();
+				bullet.AddForce(transform.forward*speed); // shoot in the target direction
+				shootTime = Time.time + shotInterval; // set time for next shot
+			}
+		}
     }
 
     void OnCollisionEnter(Collision collisionInfo)
