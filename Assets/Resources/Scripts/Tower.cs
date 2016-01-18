@@ -13,10 +13,6 @@ public class Tower : MonoBehaviour
     // Tower ID in list;
     int id = -1;
 
-    public int range;
-    public float fireSpeed;
-    public float damage;
-
     // Returns a tower from towerList
     public static Tower GetTowerByIndex(int i)
     {
